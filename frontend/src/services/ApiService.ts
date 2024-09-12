@@ -4,19 +4,10 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosRequestConfig,
 } from "axios";
+import { UserData, LoginResponse, UserProfileData } from "../types";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
-
-interface UserData {
-  email: string;
-  password: string;
-}
-
-interface LoginResponse {
-  access: string;
-  refresh: string;
-}
 
 class ApiService {
   private api: AxiosInstance;
@@ -112,6 +103,16 @@ class ApiService {
         { refresh: refreshToken }
       );
       localStorage.setItem("accessToken", response.data.access);
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
+  async getUserProfile(): Promise<UserProfileData> {
+    try {
+      const response = await this.api.get<UserProfileData>("/profile/");
+      return response.data;
     } catch (error) {
       this.handleError(error);
       throw error;

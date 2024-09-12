@@ -40,7 +40,7 @@ class CustomUser(AbstractUser):
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     bio = models.TextField(max_length=500, blank=True)
-    birth_date = models.DateField()
+    birth_date = models.DateField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.user.get_username()}'s profile"

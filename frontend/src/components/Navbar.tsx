@@ -14,10 +14,16 @@ const Navbar: React.FC = () => {
   return (
     <nav>
       <ul>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        {!isAuthenticated ? (
+        {isAuthenticated ? (
+          <>
+            <li>
+              <Link to="/profile">Profile</Link>
+            </li>
+            <li>
+              <button onClick={handleLogout}>Logout</button>
+            </li>
+          </>
+        ) : (
           <>
             <li>
               <Link to="/login">Login</Link>
@@ -26,10 +32,6 @@ const Navbar: React.FC = () => {
               <Link to="/signup">Sign Up</Link>
             </li>
           </>
-        ) : (
-          <li>
-            <button onClick={handleLogout}>Logout</button>
-          </li>
         )}
       </ul>
     </nav>
