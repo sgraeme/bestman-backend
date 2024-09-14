@@ -119,6 +119,18 @@ class ApiService {
     }
   }
 
+  async updateUserProfile(
+    data: Partial<UserProfileData>
+  ): Promise<UserProfileData> {
+    try {
+      const response = await this.api.patch<UserProfileData>("/profile/", data);
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
   private handleError(error: unknown): void {
     if (axios.isAxiosError(error)) {
       console.error("API Error:", error.response?.data);

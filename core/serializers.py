@@ -24,8 +24,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ("id", "user", "bio", "birth_date")
+        fields = ("email", "bio", "birth_date")
+        read_only_fields = ("email", "birth_date")
