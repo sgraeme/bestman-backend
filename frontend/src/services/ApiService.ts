@@ -4,10 +4,10 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosRequestConfig,
 } from "axios";
+import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import { UserData, LoginResponse, UserProfileData } from "../types";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class ApiService {
   private api: AxiosInstance;
@@ -27,7 +27,7 @@ class ApiService {
     // Request interceptor
     this.api.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem(ACCESS_TOKEN);
         if (token) {
           config.headers["Authorization"] = `Bearer ${token}`;
         }
@@ -78,8 +78,8 @@ class ApiService {
   async login(userData: UserData): Promise<LoginResponse> {
     try {
       const response = await this.api.post<LoginResponse>("/token/", userData);
-      localStorage.setItem("accessToken", response.data.access);
-      localStorage.setItem("refreshToken", response.data.refresh);
+      localStorage.setItem(ACCESS_TOKEN, response.data.access);
+      localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -88,12 +88,12 @@ class ApiService {
   }
 
   logout(): void {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    localStorage.removeItem(ACCESS_TOKEN);
+    localStorage.removeItem(REFRESH_TOKEN);
   }
 
   private async refreshToken(): Promise<void> {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN);
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
@@ -102,7 +102,7 @@ class ApiService {
         "/token/refresh/",
         { refresh: refreshToken }
       );
-      localStorage.setItem("accessToken", response.data.access);
+      localStorage.setItem(ACCESS_TOKEN, response.data.access);
     } catch (error) {
       this.handleError(error);
       throw error;

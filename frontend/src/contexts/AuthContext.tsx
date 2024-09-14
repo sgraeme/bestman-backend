@@ -5,6 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import { ACCESS_TOKEN } from "../constants";
 import { apiService } from "../services/ApiService";
 
 interface AuthContextType {
@@ -21,7 +22,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem(ACCESS_TOKEN);
     setIsAuthenticated(!!token);
   }, []);
 
