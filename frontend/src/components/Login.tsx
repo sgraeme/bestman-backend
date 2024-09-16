@@ -1,29 +1,53 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
+import { Button } from "./ui/button";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string(),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to profile if already authenticated
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/profile");
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const onSubmit = async (data: LoginFormValues) => {
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       console.log("Login successful");
     } catch (err) {
-      setError("Failed to log in. Please check your credentials.");
+      form.setError("root", {
+        type: "manual",
+        message: "Failed to log in. Please check your credentials.",
+      });
     }
   };
 
@@ -32,32 +56,52 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+    <div className="max-w-md mx-auto mt-8">
+      <h2 className="text-2xl font-bold mb-4">Login</h2>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <input
+                    type="email"
+                    className="w-full p-2 border rounded"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <input
+                    type="password"
+                    className="w-full p-2 border rounded"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <button type="submit">Login</button>
-      </form>
+          <Button type="submit">Login</Button>
+        </form>
+      </Form>
+      {form.formState.errors.root && (
+        <p className="text-red-500 mt-2">
+          {form.formState.errors.root.message}
+        </p>
+      )}
     </div>
   );
 };

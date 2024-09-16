@@ -1,51 +1,95 @@
-import React, { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
+import { Button } from "./ui/button";
 import { apiService } from "../services/ApiService";
 
-const Signup: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+const signupSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string(),
+});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+type SignupFormValues = z.infer<typeof signupSchema>;
+
+const Signup: React.FC = () => {
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: SignupFormValues) => {
     try {
-      await apiService.signup({ email, password });
+      await apiService.signup(data);
       console.log("Signup successful");
-      // Optionally, you can automatically log the user in here
-      // or redirect them to the login page
+      // TODO: Show signup was successful in UI somehow. Possibly redirect as well
     } catch (err) {
-      setError("Failed to sign up. Please try again.");
+      // TODO: Display reason signup was unsuccessful instead of just saying to try again
+      form.setError("root", {
+        type: "manual",
+        message: "Failed to sign up. Please try again.",
+      });
     }
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+    <div className="max-w-md mx-auto mt-8">
+      <h2 className="text-2xl font-bold mb-4">Sign Up</h2>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <input
+                    type="email"
+                    className="w-full p-2 border rounded"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <input
+                    type="password"
+                    className="w-full p-2 border rounded"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <button type="submit">Sign Up</button>
-      </form>
+          <Button type="submit">Sign Up</Button>
+        </form>
+      </Form>
+      {form.formState.errors.root && (
+        <p className="text-red-500 mt-2">
+          {form.formState.errors.root.message}
+        </p>
+      )}
     </div>
   );
 };
