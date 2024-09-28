@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import CustomUser, UserProfile, InterestCategory, Interest
+from .models import (
+    CustomUser,
+    UserProfile,
+    InterestCategory,
+    Interest,
+    UserInterestCategoryRanking,
+    UserInterest,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -44,3 +51,24 @@ class InterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interest
         fields = ("id", "name", "category", "category_name")
+
+
+class UserInterestSerializer(serializers.ModelSerializer):
+    interest_name = serializers.CharField(source="interest.name", read_only=True)
+    category_name = serializers.CharField(
+        source="interest.category.name", read_only=True
+    )
+
+    class Meta:
+        model = UserInterest
+        fields = ("id", "user", "interest", "interest_name", "category_name")
+        read_only_fields = ("user",)
+
+
+class UserInterestCategoryRankingSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+
+    class Meta:
+        model = UserInterestCategoryRanking
+        fields = ("id", "user", "category", "category_name", "importance")
+        read_only_fields = ("user",)

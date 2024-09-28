@@ -71,9 +71,9 @@ class UserProfile(models.Model):
         return f"{self.user.email}'s profile"
 
 
-class UserCategoryRanking(models.Model):
+class UserInterestCategoryRanking(models.Model):
     user = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="category_rankings"
+        CustomUser, on_delete=models.CASCADE, related_name="interest_category_rankings"
     )
     category = models.ForeignKey(InterestCategory, on_delete=models.CASCADE)
     importance = models.IntegerField(

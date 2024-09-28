@@ -5,7 +5,10 @@ from .views import (
     UserProfileView,
     InterestCategoryListView,
     InterestListView,
+    UserInterestView,
+    UserInterestCategoryRankingView,
 )
+
 
 urlpatterns = [
     path("register/", CreateUserView.as_view(), name="register"),
@@ -17,5 +20,11 @@ urlpatterns = [
         InterestCategoryListView.as_view(),
         name="interest-category-list",
     ),
-    path("interests/", InterestListView.as_view(), name="interest-list"),
+    path("interests/", InterestListView.as_view(), name="interest_list"),
+    path("user-interests/", UserInterestView.as_view(), name="user_interests"),
+    path(
+        "user-interest-category-rankings",
+        UserInterestCategoryRankingView.as_view(),
+        name="user_interest_category_rankings",
+    ),
 ]
