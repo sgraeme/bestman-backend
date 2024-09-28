@@ -7,6 +7,7 @@ from .views import (
     InterestListView,
     UserInterestView,
     UserInterestCategoryRankingView,
+    UserInterestsBulkUpdateView,
 )
 
 
@@ -23,8 +24,13 @@ urlpatterns = [
     path("interests/", InterestListView.as_view(), name="interest_list"),
     path("user-interests/", UserInterestView.as_view(), name="user_interests"),
     path(
-        "user-interest-category-rankings",
+        "user-interest-category-rankings/",
         UserInterestCategoryRankingView.as_view(),
         name="user_interest_category_rankings",
+    ),
+    path(
+        "user-interests-bulk-update/",
+        UserInterestsBulkUpdateView.as_view(),
+        name="user_interests_bulk_update",
     ),
 ]

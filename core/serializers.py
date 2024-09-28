@@ -64,14 +64,6 @@ class UserInterestSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "interest", "interest_name", "category_name")
         read_only_fields = ("user",)
 
-    def create(self, validated_data):
-        user = validated_data["user"]
-        interest = validated_data["interest"]
-        user_interest, _ = UserInterest.objects.get_or_create(
-            user=user, interest=interest
-        )
-        return user_interest
-
 
 class UserInterestCategoryImportanceSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
@@ -81,13 +73,20 @@ class UserInterestCategoryImportanceSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "category", "category_name", "importance")
         read_only_fields = ("user",)
 
-    def create(self, validated_data):
-        user = validated_data["user"]
-        category = validated_data["category"]
-        importance = validated_data["importance"]
-        user_category_importance, _ = (
-            UserInterestCategoryImportance.objects.update_or_create(
-                user=user, category=category, defaults={"importance": importance}
-            )
+
+class UserInterestsBulkUpdateSerializer(serializers.Serializer):
+    interest_ids = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=True
+    )
+
+    def validate_interest_ids(self, value):
+        # Check if all provided interest IDs exist
+        existing_ids = set(
+            Interest.objects.filter(id__in=value).values_list("id", flat=True)
         )
-        return user_category_importance
+        invalid_ids = set(value) - existing_ids
+        if invalid_ids:
+            raise serializers.ValidationError(
+                f"Invalid interest IDs: {', '.join(map(str, invalid_ids))}"
+            )
+        return value
