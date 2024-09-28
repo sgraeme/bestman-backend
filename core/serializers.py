@@ -4,7 +4,7 @@ from .models import (
     UserProfile,
     InterestCategory,
     Interest,
-    UserInterestCategoryRanking,
+    UserInterestCategoryImportance,
     UserInterest,
 )
 
@@ -64,11 +64,30 @@ class UserInterestSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "interest", "interest_name", "category_name")
         read_only_fields = ("user",)
 
+    def create(self, validated_data):
+        user = validated_data["user"]
+        interest = validated_data["interest"]
+        user_interest, _ = UserInterest.objects.get_or_create(
+            user=user, interest=interest
+        )
+        return user_interest
 
-class UserInterestCategoryRankingSerializer(serializers.ModelSerializer):
+
+class UserInterestCategoryImportanceSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
 
     class Meta:
-        model = UserInterestCategoryRanking
+        model = UserInterestCategoryImportance
         fields = ("id", "user", "category", "category_name", "importance")
         read_only_fields = ("user",)
+
+    def create(self, validated_data):
+        user = validated_data["user"]
+        category = validated_data["category"]
+        importance = validated_data["importance"]
+        user_category_importance, _ = (
+            UserInterestCategoryImportance.objects.get_or_create(
+                user=user, category=category, importance=importance
+            )
+        )
+        return user_category_importance
