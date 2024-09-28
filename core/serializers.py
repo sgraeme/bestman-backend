@@ -86,8 +86,8 @@ class UserInterestCategoryImportanceSerializer(serializers.ModelSerializer):
         category = validated_data["category"]
         importance = validated_data["importance"]
         user_category_importance, _ = (
-            UserInterestCategoryImportance.objects.get_or_create(
-                user=user, category=category, importance=importance
+            UserInterestCategoryImportance.objects.update_or_create(
+                user=user, category=category, defaults={"importance": importance}
             )
         )
         return user_category_importance
