@@ -2,8 +2,13 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 
-from core.models import UserProfile
-from .serializers import UserCreateSerializer, UserProfileSerializer
+from core.models import UserProfile, InterestCategory, Interest
+from .serializers import (
+    UserCreateSerializer,
+    UserProfileSerializer,
+    InterestCategorySerializer,
+    InterestSerializer,
+)
 
 CustomUser = get_user_model()
 
@@ -18,7 +23,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore
         """
         This view should return the UserProfile for the currently authenticated user.
         """
@@ -35,3 +40,15 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
             # TODO: Make this proper logging
             print("A new profile was created.")
         return obj
+
+
+class InterestCategoryListView(generics.ListAPIView):
+    queryset = InterestCategory.objects.all()
+    serializer_class = InterestCategorySerializer
+    permission_classes = (permissions.AllowAny,)
+
+
+class InterestListView(generics.ListAPIView):
+    queryset = Interest.objects.all()
+    serializer_class = InterestSerializer
+    permission_classes = (permissions.AllowAny,)

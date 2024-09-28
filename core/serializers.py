@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, UserProfile
+from .models import CustomUser, UserProfile, InterestCategory, Interest
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,3 +30,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = ("email", "bio", "birth_date")
         read_only_fields = ("email", "birth_date")
+
+
+class InterestCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterestCategory
+        fields = ("id", "name")
+
+
+class InterestSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+
+    class Meta:
+        model = Interest
+        fields = ("id", "name", "category", "category_name")
