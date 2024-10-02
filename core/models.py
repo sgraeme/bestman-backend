@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-class CustomUserManager(BaseUserManager):
+class CustomUserManager(BaseUserManager["CustomUser"]):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError("The Email field must be set")
@@ -29,7 +29,7 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()
+    objects = CustomUserManager()  # type: ignore
 
     def __str__(self):
         return self.email
@@ -42,7 +42,7 @@ class InterestCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name}"
 
     class Meta:
         verbose_name_plural = "Interest Categories"
@@ -73,7 +73,9 @@ class UserProfile(models.Model):
 
 class UserInterestCategoryImportance(models.Model):
     user = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="interest_category_rankings"
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="interest_category_importances",
     )
     category = models.ForeignKey(InterestCategory, on_delete=models.CASCADE)
     importance = models.IntegerField(

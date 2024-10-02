@@ -35,7 +35,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get_queryset(self):  # type: ignore
+    def get_queryset(self):
         """
         This view should return the UserProfile for the currently authenticated user.
         """
@@ -70,7 +70,7 @@ class UserInterestView(generics.ListCreateAPIView):
     serializer_class = UserInterestSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get_queryset(self):  # type: ignore
+    def get_queryset(self):
         return UserInterest.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer: BaseSerializer) -> None:
@@ -84,11 +84,13 @@ class UserInterestView(generics.ListCreateAPIView):
             serializer.instance = user_interest
 
 
-class UserInterestCategoryRankingView(generics.ListCreateAPIView):
+class UserInterestCategoryImportanceView(
+    generics.ListCreateAPIView[UserInterestCategoryImportance]
+):
     serializer_class = UserInterestCategoryImportanceSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get_queryset(self):  # type: ignore
+    def get_queryset(self):
         return UserInterestCategoryImportance.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer: BaseSerializer) -> None:
@@ -115,7 +117,7 @@ class UserInterestsBulkUpdateView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        new_interest_ids = set(serializer.validated_data["interest_ids"])
+        new_interest_ids: set[int] = set(serializer.validated_data["interest_ids"])
 
         # Remove existing UserInterests not in the new set
         UserInterest.objects.filter(user=user).exclude(
@@ -123,7 +125,7 @@ class UserInterestsBulkUpdateView(generics.GenericAPIView):
         ).delete()
 
         # Add new UserInterests
-        existing_interest_ids = set(
+        existing_interest_ids: set[int] = set(
             UserInterest.objects.filter(user=user).values_list(
                 "interest__id", flat=True
             )
