@@ -1,9 +1,10 @@
+from typing import Any, Dict
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from typing import Any, Dict
+from django.db.models import Prefetch
 
 from core.models import (
     UserProfile,
@@ -71,7 +72,9 @@ class UserInterestView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return UserInterest.objects.filter(user=self.request.user)
+        return UserInterest.objects.filter(user=self.request.user).prefetch_related(
+            Prefetch("interest", queryset=Interest.objects.select_related("category"))
+        )
 
     def perform_create(self, serializer: BaseSerializer) -> None:
         user = self.request.user

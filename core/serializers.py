@@ -53,16 +53,24 @@ class InterestSerializer(serializers.ModelSerializer[Interest]):
         fields = ("id", "name", "category", "category_name")
 
 
-class UserInterestSerializer(serializers.ModelSerializer[UserInterest]):
+class UserInterestSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    user_id = serializers.PrimaryKeyRelatedField(source="user", read_only=True)
+    interest_id = serializers.PrimaryKeyRelatedField(
+        source="interest", queryset=Interest.objects.all()
+    )
     interest_name = serializers.CharField(source="interest.name", read_only=True)
     category_name = serializers.CharField(
         source="interest.category.name", read_only=True
     )
 
-    class Meta:  # type: ignore
-        model = UserInterest
-        fields = ("id", "user", "interest", "interest_name", "category_name")
-        read_only_fields = ("user",)
+    def create(self, validated_data):
+        return UserInterest.objects.create(**validated_data)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["interest_id"] = instance.interest_id
+        return ret
 
 
 class UserInterestCategoryImportanceSerializer(
