@@ -1,6 +1,14 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
+from .models import CustomUser, UserInterest, UserProfile, InterestCategory, Interest
+
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+
+
+class UserInterestsTabular(admin.TabularInline):
+    model = UserInterest
 
 
 class CustomUserAdmin(UserAdmin):
@@ -30,6 +38,9 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ("email",)
     ordering = ("email",)
+    inlines = (UserProfileInline, UserInterestsTabular)
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(InterestCategory)
+admin.site.register(Interest)
