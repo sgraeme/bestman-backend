@@ -5,6 +5,7 @@ from rest_framework.serializers import BaseSerializer
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Prefetch
+from django.shortcuts import get_object_or_404
 
 from core.models import (
     UserProfile,
@@ -21,6 +22,7 @@ from .serializers import (
     UserInterestSerializer,
     UserInterestCategoryImportanceSerializer,
     UserInterestsBulkUpdateSerializer,
+    PublicProfileSerializer,
 )
 
 CustomUser = get_user_model()
@@ -81,9 +83,7 @@ class UserInterestView(generics.ListCreateAPIView):
         validated_data: Dict[str, Any] = getattr(serializer, "validated_data", {})
         interest = validated_data.get("interest")
         if interest:
-            user_interest, _ = UserInterest.objects.get_or_create(
-                user=user, interest=interest
-            )
+            user_interest, _ = UserInterest.objects.get_or_create(user=user, interest=interest)
             serializer.instance = user_interest
 
 
@@ -102,10 +102,8 @@ class UserInterestCategoryImportanceView(
         category = validated_data.get("category")
         importance = validated_data.get("importance")
         if category is not None and importance is not None:
-            user_category_importance, _ = (
-                UserInterestCategoryImportance.objects.update_or_create(
-                    user=user, category=category, defaults={"importance": importance}
-                )
+            user_category_importance, _ = UserInterestCategoryImportance.objects.update_or_create(
+                user=user, category=category, defaults={"importance": importance}
             )
             serializer.instance = user_category_importance
 
@@ -123,21 +121,16 @@ class UserInterestsBulkUpdateView(generics.GenericAPIView):
         new_interest_ids: set[int] = set(serializer.validated_data["interest_ids"])
 
         # Remove existing UserInterests not in the new set
-        UserInterest.objects.filter(user=user).exclude(
-            interest__id__in=new_interest_ids
-        ).delete()
+        UserInterest.objects.filter(user=user).exclude(interest__id__in=new_interest_ids).delete()
 
         # Add new UserInterests
         existing_interest_ids: set[int] = set(
-            UserInterest.objects.filter(user=user).values_list(
-                "interest__id", flat=True
-            )
+            UserInterest.objects.filter(user=user).values_list("interest__id", flat=True)
         )
         interests_to_add = new_interest_ids - existing_interest_ids
 
         new_user_interests = [
-            UserInterest(user=user, interest_id=interest_id)
-            for interest_id in interests_to_add
+            UserInterest(user=user, interest_id=interest_id) for interest_id in interests_to_add
         ]
         UserInterest.objects.bulk_create(new_user_interests)
 
@@ -150,3 +143,17 @@ class UserInterestsBulkUpdateView(generics.GenericAPIView):
         result_serializer = UserInterestSerializer(updated_user_interests, many=True)
 
         return Response(result_serializer.data, status=status.HTTP_200_OK)
+
+
+class PublicProfileView(generics.RetrieveAPIView):
+    serializer_class = PublicProfileSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        user_id = self.kwargs.get("user_id")
+        return get_object_or_404(
+            UserProfile.objects.select_related("user").prefetch_related(
+                "user__user_interests__interest__category"
+            ),
+            user__id=user_id,
+        )

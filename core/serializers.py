@@ -1,3 +1,4 @@
+from datetime import date
 from rest_framework import serializers
 from .models import (
     CustomUser,
@@ -54,15 +55,12 @@ class InterestSerializer(serializers.ModelSerializer[Interest]):
 
 
 class UserInterestSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(source="user", read_only=True)
     interest_id = serializers.PrimaryKeyRelatedField(
         source="interest", queryset=Interest.objects.all()
     )
     interest_name = serializers.CharField(source="interest.name", read_only=True)
-    category_name = serializers.CharField(
-        source="interest.category.name", read_only=True
-    )
+    category_name = serializers.CharField(source="interest.category.name", read_only=True)
 
     def create(self, validated_data):
         return UserInterest.objects.create(**validated_data)
@@ -85,18 +83,34 @@ class UserInterestCategoryImportanceSerializer(
 
 
 class UserInterestsBulkUpdateSerializer(serializers.Serializer):
-    interest_ids = serializers.ListField(
-        child=serializers.IntegerField(), allow_empty=True
-    )
+    interest_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=True)
 
     def validate_interest_ids(self, value):
         # Check if all provided interest IDs exist
-        existing_ids = set(
-            Interest.objects.filter(id__in=value).values_list("id", flat=True)
-        )
+        existing_ids = set(Interest.objects.filter(id__in=value).values_list("id", flat=True))
         invalid_ids = set(value) - existing_ids
         if invalid_ids:
             raise serializers.ValidationError(
                 f"Invalid interest IDs: {', '.join(map(str, invalid_ids))}"
             )
         return value
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+    interests = UserInterestSerializer(source="user.user_interests", many=True, read_only=True)
+
+    class Meta:  # type: ignore
+        model = UserProfile
+        fields = ("bio", "age", "interests")
+        read_only_fields = fields
+
+    def get_age(self, obj):
+        if obj.birth_date:
+            today = date.today()
+            return (
+                today.year
+                - obj.birth_date.year
+                - ((today.month, today.day) < (obj.birth_date.month, obj.birth_date.day))
+            )
+        return None
