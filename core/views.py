@@ -5,7 +5,6 @@ from rest_framework.serializers import BaseSerializer
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Prefetch
-from django.shortcuts import get_object_or_404
 
 from core.models import (
     UserProfile,
@@ -22,7 +21,6 @@ from .serializers import (
     UserInterestSerializer,
     UserInterestCategoryImportanceSerializer,
     UserInterestsBulkUpdateSerializer,
-    PublicProfileSerializer,
 )
 
 CustomUser = get_user_model()
@@ -143,17 +141,3 @@ class UserInterestsBulkUpdateView(generics.GenericAPIView):
         result_serializer = UserInterestSerializer(updated_user_interests, many=True)
 
         return Response(result_serializer.data, status=status.HTTP_200_OK)
-
-
-class PublicProfileView(generics.RetrieveAPIView):
-    serializer_class = PublicProfileSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get_object(self):
-        user_id = self.kwargs.get("user_id")
-        return get_object_or_404(
-            UserProfile.objects.select_related("user").prefetch_related(
-                "user__user_interests__interest__category"
-            ),
-            user__id=user_id,
-        )

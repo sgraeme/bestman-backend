@@ -8,7 +8,6 @@ from .views import (
     UserInterestView,
     UserInterestCategoryImportanceView,
     UserInterestsBulkUpdateView,
-    PublicProfileView,
 )
 
 urlpatterns = [
@@ -32,10 +31,5 @@ urlpatterns = [
         "user-interests-bulk-update/",
         UserInterestsBulkUpdateView.as_view(),
         name="user_interests_bulk_update",
-    ),
-    path(
-        "users/<int:user_id>/public-profile/",
-        PublicProfileView.as_view(),
-        name="public-profile",
     ),
 ]
