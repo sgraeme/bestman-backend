@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
@@ -25,6 +26,7 @@ class CustomUserManager(BaseUserManager["CustomUser"]):
 class CustomUser(AbstractUser):
     username = None  # email is the username
     email = models.EmailField("email address", unique=True)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -36,6 +38,11 @@ class CustomUser(AbstractUser):
 
     class Meta:
         ordering = ["email"]
+
+    def save(self, *args, **kwargs):
+        if not self.public_id:
+            self.public_id = uuid.uuid4()
+        super().save(*args, **kwargs)
 
 
 class InterestCategory(models.Model):
@@ -84,18 +91,14 @@ class UserInterestCategoryImportance(models.Model):
     )
 
     def __str__(self):
-        return (
-            f"{self.user.email} - {self.category.name} (Importance: {self.importance})"
-        )
+        return f"{self.user.email} - {self.category.name} (Importance: {self.importance})"
 
     class Meta:
         unique_together = ("user", "category")
 
 
 class UserInterest(models.Model):
-    user = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="user_interests"
-    )
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="user_interests")
     interest = models.ForeignKey(Interest, on_delete=models.CASCADE)
 
     def __str__(self):
