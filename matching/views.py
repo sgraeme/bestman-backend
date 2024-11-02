@@ -1,6 +1,10 @@
+from typing import Union
+from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import get_object_or_404
+from django.db.models import Count, Q
 from rest_framework import generics, permissions
-from core.models import UserProfile
+from rest_framework.pagination import PageNumberPagination
+from core.models import CustomUser, Interest, UserProfile
 from .serializers import PublicProfileSerializer
 
 
@@ -20,4 +24,36 @@ class PublicProfileView(generics.RetrieveAPIView):
                 "user__user_interests__interest__category"
             ),
             user__public_id=user_id,
+        )
+
+
+class CommonInterestsUsersView(generics.ListAPIView):
+    serializer_class = PublicProfileSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = PageNumberPagination
+    page_size = 10
+
+    def get_queryset(self):
+        user: Union[CustomUser, AnonymousUser] = self.request.user
+        if isinstance(user, AnonymousUser):
+            return UserProfile.objects.none()
+
+        return (
+            UserProfile.objects.exclude(user_id=user.id)
+            .filter(
+                user__user_interests__interest__in=Interest.objects.filter(userinterest__user=user)
+            )
+            .annotate(
+                shared_interests_count=Count(
+                    "user__user_interests",
+                    filter=Q(
+                        user__user_interests__interest__in=Interest.objects.filter(
+                            userinterest__user=user
+                        )
+                    ),
+                )
+            )
+            # email as secondary ordering for consistency but can be anything
+            .order_by("-shared_interests_count", "user__email")
+            .distinct()
         )

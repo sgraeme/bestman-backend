@@ -1,16 +1,28 @@
 from datetime import date
 from rest_framework import serializers
-from core.serializers import UserInterestSerializer
-from core.models import UserProfile
+from core.models import UserProfile, UserInterest
+
+
+class PublicUserInterestSerializer(serializers.ModelSerializer):
+    interest_name = serializers.CharField(source="interest.name", read_only=True)
+    category_name = serializers.CharField(source="interest.category.name", read_only=True)
+
+    class Meta:  # type: ignore
+        model = UserInterest
+        fields = ("interest_name", "category_name")
+        read_only_fields = fields
 
 
 class PublicProfileSerializer(serializers.ModelSerializer):
+    public_id = serializers.UUIDField(source="user.public_id", read_only=True)
     age = serializers.SerializerMethodField()
-    interests = UserInterestSerializer(source="user.user_interests", many=True, read_only=True)
+    interests = PublicUserInterestSerializer(
+        source="user.user_interests", many=True, read_only=True
+    )
 
     class Meta:  # type: ignore
         model = UserProfile
-        fields = ("bio", "age", "interests")
+        fields = ("public_id", "bio", "age", "interests")
         read_only_fields = fields
 
     def get_age(self, obj):
